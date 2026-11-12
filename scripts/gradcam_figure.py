@@ -23,7 +23,12 @@ def main():
     ap.add_argument("--n", type=int, default=4, help="examples per group")
     ap.add_argument("--pool", type=int, default=300, help="images to search through")
     ap.add_argument("--out", default="results/fig_gradcam.png")
+    ap.add_argument("--device", choices=["auto", "cpu", "mps", "cuda"], default="auto",
+                    help="force a device (on a Mac, cpu avoids MPS training problems)")
     a = ap.parse_args()
+    if a.device != "auto":
+        import os
+        os.environ["DETECTOR_DEVICE"] = a.device
 
     det = CNNDetector.load(a.model)
     cam = GradCAM(det)

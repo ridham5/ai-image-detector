@@ -87,7 +87,12 @@ class FFTSVMDetector:
 
 # --------------------------------------------------------------------------- Method 2
 def _device():
+    """Pick the device: env var DETECTOR_DEVICE (cpu / mps / cuda) wins, else the fastest available."""
+    import os
     import torch
+    forced = os.environ.get("DETECTOR_DEVICE", "").strip().lower()
+    if forced in {"cpu", "mps", "cuda"}:
+        return forced
     if torch.cuda.is_available():
         return "cuda"
     if getattr(torch.backends, "mps", None) and torch.backends.mps.is_available():
@@ -144,10 +149,20 @@ class CNNDetector:
                 opt.zero_grad(set_to_none=True)
                 with torch.autocast(device_type="cuda", dtype=torch.float16, enabled=use_amp):
                     loss = loss_fn(self.model(x).squeeze(1), y)
+                if not torch.isfinite(loss):
+                    raise RuntimeError(
+                        f"Training loss became {loss.item()} at epoch {ep} step {i} - training blew up. "
+                        f"On a Mac, re-run with --device cpu (or use Google Colab).")
                 scaler.scale(loss).backward()
+                scaler.unscale_(opt)
+                torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)  # keep updates small
                 scaler.step(opt)
                 scaler.update()
                 sched.step()
+                if loss.item() > 50:
+                    raise RuntimeError(
+                        f"Training loss jumped to {loss.item():.3g} at epoch {ep} step {i} - training blew up. "
+                        f"On a Mac, re-run with --device cpu (or use Google Colab).")
                 run += loss.item() * len(y)
                 seen += len(y)
                 if i == 1 or i % 10 == 0 or i == len(dl):

@@ -41,7 +41,12 @@ def main():
     ap.add_argument("--clip-arch", default="ViT-B-32")
     ap.add_argument("--clip-pretrained", default="openai")
     ap.add_argument("--probe-C", type=float, default=1.0)
+    ap.add_argument("--device", choices=["auto", "cpu", "mps", "cuda"], default="auto",
+                    help="force a device (on a Mac, cpu avoids MPS training problems)")
     a = ap.parse_args()
+    if a.device != "auto":
+        import os
+        os.environ["DETECTOR_DEVICE"] = a.device
 
     random.seed(a.seed)
     np.random.seed(a.seed)

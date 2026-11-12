@@ -40,7 +40,12 @@ def main():
     ap.add_argument("--num-workers", type=int, default=2)
     ap.add_argument("--results", default="results/results.csv")
     ap.add_argument("--save-preds", action="store_true", help="also save per-image probabilities")
+    ap.add_argument("--device", choices=["auto", "cpu", "mps", "cuda"], default="auto",
+                    help="force a device (on a Mac, cpu avoids MPS training problems)")
     a = ap.parse_args()
+    if a.device != "auto":
+        import os
+        os.environ["DETECTOR_DEVICE"] = a.device
 
     model_path = a.model or f"models/{DEFAULT_FILES[a.method]}"
     det = load_detector(a.method, model_path)
