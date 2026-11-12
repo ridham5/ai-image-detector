@@ -135,6 +135,7 @@ class CNNDetector:
         use_amp = self.device == "cuda"
         scaler = torch.amp.GradScaler("cuda", enabled=use_amp)
         best, history = -1.0, []
+        print(f"[resnet50] {len(dl)} steps per epoch (batch {batch_size}); first step can take a while ...", flush=True)
         for ep in range(1, epochs + 1):
             self.model.train()
             t, run, seen = time.time(), 0.0, 0
@@ -149,8 +150,10 @@ class CNNDetector:
                 sched.step()
                 run += loss.item() * len(y)
                 seen += len(y)
-                if i % 50 == 0:
-                    print(f"  epoch {ep} step {i}/{len(dl)} loss {run / seen:.4f}", flush=True)
+                if i == 1 or i % 10 == 0 or i == len(dl):
+                    per = (time.time() - t) / i
+                    print(f"  epoch {ep} step {i}/{len(dl)} loss {run / seen:.4f}  "
+                          f"{per:.1f}s/step, ~{per * (len(dl) - i) / 60:.1f} min left in epoch", flush=True)
             msg = f"[resnet50] epoch {ep}/{epochs} train_loss {run / max(seen, 1):.4f} ({time.time() - t:.0f}s)"
             row = {"epoch": ep, "train_loss": run / max(seen, 1)}
             if val_items:
