@@ -45,13 +45,27 @@ def noise(img: Image.Image, std: float, seed: int = 0) -> Image.Image:
     return Image.fromarray(np.clip(a, 0, 255).astype(np.uint8))
 
 
+_FNS = {"jpeg": jpeg, "blur": blur, "resize": resize, "noise": noise}
+
+
+class Perturbation:
+    """A picklable PIL -> PIL callable (needed for DataLoader workers on Windows / macOS)."""
+
+    def __init__(self, name: str, value: float):
+        self.name, self.value = name, value
+
+    def __call__(self, img: Image.Image) -> Image.Image:
+        return _FNS[self.name](img, self.value)
+
+    def __repr__(self):
+        return f"{self.name}:{self.value:g}"
+
+
 def get_perturbation(spec: str | None):
-    """Turn a spec string like 'jpeg:75' into a function PIL -> PIL (or None)."""
+    """Turn a spec string like 'jpeg:75' into a callable PIL -> PIL (or None)."""
     if spec is None or spec == "none":
         return None
     name, _, val = spec.partition(":")
-    fns = {"jpeg": jpeg, "blur": blur, "resize": resize, "noise": noise}
-    if name not in fns or not val:
+    if name not in _FNS or not val:
         raise ValueError(f"Unknown perturbation '{spec}'. Use e.g. none, jpeg:75, blur:1, resize:0.5, noise:8")
-    v = float(val)
-    return lambda img: fns[name](img, v)
+    return Perturbation(name, float(val))
