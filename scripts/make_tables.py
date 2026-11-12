@@ -75,12 +75,14 @@ def main():
     ap.add_argument("--results", default="results/results.csv")
     ap.add_argument("--main-test", default="cifake", help="test_set name used for the main + robustness tables")
     ap.add_argument("--out-dir", default="results")
+    ap.add_argument("--exclude", nargs="*", default=["dummy"], help="test sets to leave out of the tables")
     a = ap.parse_args()
     out = Path(a.out_dir)
     out.mkdir(parents=True, exist_ok=True)
     plt = setup()
 
     df = pd.read_csv(a.results)
+    df = df[~df.test_set.isin(a.exclude)]
     # if an experiment was re-run, keep only the latest row
     df = df.drop_duplicates(["method", "train_set", "test_set", "perturbation"], keep="last")
     methods = ordered_methods(df)
