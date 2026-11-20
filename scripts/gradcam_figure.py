@@ -53,9 +53,11 @@ def main():
         from torchvision import transforms as T
         axes[0, j].imshow(T.Compose([T.Resize(int(size * 1.14)), T.CenterCrop(size)])(img))
         axes[1, j].imshow(overlay(img, heat, size))
-        axes[0, j].set_title(f"{group}\nP(fake)={p:.2f}", fontsize=7)
+        short = {"Real, correct": "Real (correct)", "Fake, correct": "Fake (correct)"}.get(group, f"Mistake ({'fake' if label else 'real'})")
+        axes[0, j].set_title(f"{short}\nP(fake) = {p:.2f}", fontsize=5.5)
         for i in (0, 1):
             axes[i, j].axis("off")
+    fig.subplots_adjust(wspace=0.08, hspace=0.05)
     fig.savefig(a.out)
     print(f"wrote {a.out}")
 
