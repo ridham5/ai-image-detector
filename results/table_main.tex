@@ -1,0 +1,16 @@
+\begin{table}[t]
+\centering
+\caption{Detection results on the clean cifake test set.}
+\label{tab:main}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lccccccc}
+\toprule
+ & Acc & Prec & Recall & F1 & AUC & Real acc & Fake acc \\
+\midrule
+FFT + SVM & 0.835 & 0.835 & 0.834 & 0.834 & 0.913 & 0.835 & 0.834 \\
+ResNet-50 & \textbf{0.966} & \textbf{0.968} & \textbf{0.964} & \textbf{0.966} & \textbf{0.995} & \textbf{0.969} & \textbf{0.964} \\
+CLIP + linear probe & 0.902 & 0.904 & 0.899 & 0.902 & 0.966 & 0.905 & 0.899 \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
